@@ -6,7 +6,6 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.gavrilovegor519.tasks_user.dto.input.RegDto;
 
 import java.util.Collections;
 
@@ -21,14 +20,14 @@ public class KeycloakAdminClientService {
         this.kcProvider = kcProvider;
     }
 
-    public Response createKeycloakUser(RegDto user) {
+    public Response createKeycloakUser(String email, String password) {
         UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
-        CredentialRepresentation credentialRepresentation = createPasswordCredentials(user.getPassword());
+        CredentialRepresentation credentialRepresentation = createPasswordCredentials(password);
 
         UserRepresentation kcUser = new UserRepresentation();
-        kcUser.setUsername(user.getEmail());
+        kcUser.setUsername(email);
         kcUser.setCredentials(Collections.singletonList(credentialRepresentation));
-        kcUser.setEmail(user.getEmail());
+        kcUser.setEmail(email);
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
         return usersResource.create(kcUser);

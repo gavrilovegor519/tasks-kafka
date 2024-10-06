@@ -1,6 +1,6 @@
 package ru.gavrilovegor519.tasks_user.controller;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
@@ -33,8 +33,8 @@ public class UserController {
     }
 
     @PostMapping(value = "/reg")
-    public ResponseEntity<String> createUser(@RequestBody RegDto user) {
-        try (Response createdResponse = kcAdminClient.createKeycloakUser(user)) {
+    public ResponseEntity<String> createUser(@RequestBody @Valid RegDto user) {
+        try (Response createdResponse = kcAdminClient.createKeycloakUser(user.getEmail(), user.getPassword())) {
             return ResponseEntity.status(createdResponse.getStatus())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(createdResponse.readEntity(String.class));
@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AccessTokenResponse> login(@NotNull @RequestBody LoginDto loginRequest) {
+    public ResponseEntity<AccessTokenResponse> login(@RequestBody @Valid LoginDto loginRequest) {
         AccessTokenResponse accessTokenResponse = null;
         try (Keycloak keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(
                 loginRequest.getEmail(), loginRequest.getPassword()).build()) {
