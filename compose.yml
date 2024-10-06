@@ -1,6 +1,6 @@
 services:
   broker:
-    image: apache/kafka:latest
+    image: apache/kafka:3.8.0
     hostname: broker
     container_name: broker
     restart: always
@@ -35,7 +35,7 @@ services:
       - broker
   postgres:
     container_name: postgres
-    image: postgres
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -47,7 +47,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
   keycloak:
-    image: quay.io/keycloak/keycloak
+    image: quay.io/keycloak/keycloak:26.0
     container_name: keycloak
     environment:
       DB_VENDOR: POSTGRES
