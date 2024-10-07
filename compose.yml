@@ -36,6 +36,7 @@ services:
   postgres:
     container_name: postgres
     image: postgres:16-alpine
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -45,10 +46,10 @@ services:
       - postgres:/data/postgres
     ports:
       - "5432:5432"
-    restart: unless-stopped
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: keycloak
+    restart: always
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: postgres
@@ -69,8 +70,17 @@ services:
       - postgres
     links:
       - "postgres:postgres"
+  mongo-tasks:
+    container_name: mongo-tasks
+    image: mongo:8.0
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - dbdata:/data/db
 networks:
   tasks:
     driver: bridge
 volumes:
   postgres:
+  dbdata:
