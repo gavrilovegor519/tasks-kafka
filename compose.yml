@@ -1,23 +1,23 @@
 services:
-  broker:
+  kafka:
     image: apache/kafka:3.8.0
-    hostname: broker
-    container_name: broker
+    hostname: kafka
+    container_name: kafka
     restart: always
     ports:
       - 9092:9092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_PROCESS_ROLES: kafka,controller
       KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
-      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
@@ -26,36 +26,38 @@ services:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
     ports:
-      - 8090:8080
+      - 8081:8080
     restart: always
     environment:
-      KAFKA_CLUSTERS_0_NAME: broker
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092
+      KAFKA_CLUSTERS_0_NAME: kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     links:
-      - broker
-  postgres:
-    container_name: postgres
+      - kafka
+  keycloak-db:
+    container_name: keycloak-db
     image: postgres:16-alpine
     restart: always
+    ports:
+      - 5432:5432
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-keycloak-db}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-keycloak-db}
       POSTGRES_DB: keycloak_db
       PGDATA: /data/postgres
     volumes:
-      - postgres:/data/postgres
-    ports:
-      - "5432:5432"
+      - dbdata-keycloak:/data/postgres
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: keycloak
     restart: always
+    ports:
+      - 8082:8080
     environment:
       DB_VENDOR: POSTGRES
-      DB_ADDR: postgres
+      DB_ADDR: keycloak-db
       DB_DATABASE: keycloak_db
-      DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_USER: ${POSTGRES_USER:-keycloak-db}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-keycloak-db}
       KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
       KEYCLOAK_USER: ${KEYCLOAK_USER:-user}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_PASSWORD:-user_password}
@@ -64,23 +66,21 @@ services:
       KC_HTTP_ENABLED: true
       HTTP_ADDRESS_FORWARDING: true
     command: start
-    ports:
-      - "8484:8080"
     depends_on:
-      - postgres
+      - keycloak-db
     links:
-      - "postgres:postgres"
+      - "keycloak-db:keycloak-db"
   mongo-tasks:
     container_name: mongo-tasks
     image: mongo:8.0
     restart: always
     ports:
-      - 27017:27017
+      - 8091:27017
     volumes:
-      - dbdata:/data/db
+      - dbdata-tasks:/data/db
 networks:
   tasks:
     driver: bridge
 volumes:
-  postgres:
-  dbdata:
+  dbdata-keycloak:
+  dbdata-tasks:
