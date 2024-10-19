@@ -37,8 +37,8 @@ services:
     container_name: keycloak-db
     image: postgres:16-alpine
     restart: always
-    ports:
-      - 5432:5432
+#    ports:
+#      - 5432:5432
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-keycloak-db}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-keycloak-db}
@@ -66,6 +66,8 @@ services:
       KC_HTTP_ENABLED: true
       HTTP_ADDRESS_FORWARDING: true
     command: start
+    volumes:
+      - ./keycloak-realms:/opt/keycloak/data/import
     depends_on:
       - keycloak-db
     links:
