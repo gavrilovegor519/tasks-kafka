@@ -3,6 +3,7 @@ package ru.gavrilovegor519.tasks_user.controller;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
+import kong.unirest.core.JsonNode;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.AccessTokenResponse;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.gavrilovegor519.tasks_user.dto.input.LoginDto;
+import ru.gavrilovegor519.tasks_user.dto.input.RefreshDto;
 import ru.gavrilovegor519.tasks_user.dto.input.RegDto;
 import ru.gavrilovegor519.tasks_user.keycloak.KeycloakAdminClientService;
 import ru.gavrilovegor519.tasks_user.keycloak.KeycloakProvider;
@@ -52,6 +54,11 @@ public class UserController {
             LOG.warn("invalid account. User probably hasn't verified email.", ex);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(accessTokenResponse);
         }
+    }
+
+    @PostMapping("/refresh")
+    public JsonNode refresh(@RequestBody @Valid RefreshDto refreshDto) {
+        return kcAdminClient.refreshToken(refreshDto.getRefreshToken());
     }
 
 }
